@@ -17,7 +17,7 @@ const Signup = () => {
         return; // Stop further execution
     }
 
-            axios.post('http://localhost:3000/signup', { email, password })
+        axios.post('https://deploy-mern-1whq.vercel.app/signup', { email, password })
                 .then(result  => { console.log(result)
                     navigate('/login')
                 })
