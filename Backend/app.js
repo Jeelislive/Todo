@@ -8,11 +8,24 @@ const userModel = require('./models/user');
 
 const app = express();
 
+
+
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: [ "https://deploy-mern-1whq.vercel.app" ],
+    methods: [ "POST", "GET" ],
+    credentials: true,
+}));
+
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URL);
+
+app.get('/', (req, res) => {
+    res.json("helllllllllllllo");
+});
+
 
 app.use(session({
     secret: 'your-secret-key', // Replace with a strong secret key
@@ -56,10 +69,6 @@ app.post('/signup', (req, res) => {
 });
 
 
-app.get('/todo',  requireLogin, (req, res) => {
-    console.log("hyyyyyyyyyyyyyyy");
-    res.render('/todo');
-});
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
