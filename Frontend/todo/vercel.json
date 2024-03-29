@@ -1,0 +1,13 @@
+{
+	"name": "todo",
+	"version": 2,
+	"builds": [
+		{ "src": "package.json", "use": "@vercel/node" }, // Backend build
+		{ "src": "public/**", "use": "@vercel/static" } // Frontend build
+	],
+	"routes": [
+		{ "handle": "filesystem" },
+		{ "src": "/api/(.*)", "dest": "app.js" }, // Route API requests to app.js
+		{ "src": "/(.*)", "dest": "public/index.html" } // Serve index.html for frontend
+	]
+}
