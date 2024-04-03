@@ -1,16 +1,17 @@
 import React, { useEffect, useState, } from 'react';
-import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
- 
+import { useNavigate } from "react-router-dom";
+
 
 const Todo = () => {
 
     const [ todo, setTodo ] = useState('');
     const [ todos, setTodos ] = useState([]);
     const [ showFinished, setshowFinished ] = useState(true);
-    
+    const [ errorMessage, setErrorMessage ] = useState('');
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setTodo(e.target.value);
@@ -94,7 +95,7 @@ const Todo = () => {
                 {todos.length ==0 && <div className='m-5'>No Todos to Display</div>}
                 { todos.map(item => (
                     (showFinished || !item.isCompleted) &&
-                    <li className="flex items-center justify-between bg-gray-100 p-4 rounded-md">
+                    <li key={ item.id } className="flex items-center justify-between bg-gray-100 p-4 rounded-md">
                         <input type='checkbox' name={item.id} onChange={handleCheckbox} checked={item.isCompleted} id={item.id}></input>
                         <span className={ item.isCompleted ? "line-through" : "" }>{ item.todo }</span>
                         <div>

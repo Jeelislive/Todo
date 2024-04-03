@@ -1,28 +1,46 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-// Assuming you're using React Router for navigation
-import axios from 'axios';
+
 
 
 const Signup = () => {
-    const [ email, setEmail ] = useState();
-    const [ password, setPassword ] = useState();
+    const [ username, setUsername ] = useState('');
+    const [ email, setEmail ] = useState('');
+    const [ password, setPassword ] = useState('');
+    const [ errorMessage, setErrorMessage ] = useState('');
     const navigate = useNavigate();
-    
-    const handleSubmit = (e) => {
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (!password.match(/^[a-zA-Z]/)) {
-        alert("Password must start with a letter.");
-        return; // Stop further execution
-    }
-
-        axios.post('https://deploy-mern-1whq.vercel.app/signup', { email, password })
-                .then(result  => { console.log(result)
-                    navigate('/login')
-                })
-                .catch(err => console.log(err));
+            alert("Password must start with a letter.");
+            return;
         }
+
+        try {
+
+            const option = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            }
+            const response = await fetch('http://localhost:3000/signup', option);
+
+            if (response.ok) {
+                navigate('/todo');
+            }
+            else {
+                const errorMessage = await response.text();
+                setErrorMessage(errorMessage || 'Incorrect email or password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to sign up');
+        }
+    };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -32,10 +50,27 @@ const Signup = () => {
                         Sign up for an account
                     </h2>
                 </div>
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6" action="#" method="POST">
+                <form onSubmit={ handleSubmit } className="mt-8 space-y-6" action="#" method="POST">
                     <input type="hidden" name="remember" value="true" />
                     <div className="rounded-md shadow-sm -space-y-px">
-                        
+
+                        <div>
+                            <label htmlFor="username" className="sr-only">
+                                username
+                            </label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="username"
+                                autoComplete="username"
+                                required
+                                value={ username }
+                                onChange={ (e) => setUsername(e.target.value) }
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Username"
+                            />
+
+                        </div>
                         <div>
                             <label htmlFor="email-address" className="sr-only">
                                 Email address
@@ -46,10 +81,12 @@ const Signup = () => {
                                 type="email"
                                 autoComplete="email"
                                 required
+                                value={ email }
+                                onChange={ (e) => setEmail(e.target.value) }
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Email address"
-                                onChange={(e) => setEmail(e.target.value)}
                             />
+
                         </div>
                         <div>
                             <label htmlFor="password" className="sr-only">
@@ -59,15 +96,24 @@ const Signup = () => {
                                 id="password"
                                 name="password"
                                 type="password"
-                                autoComplete="new-password"
+                                autoComplete="current-password"
                                 required
+                                value={ password }
+                                onChange={ (e) => setPassword(e.target.value) }
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Password"
-                                onChange={ (e) => setPassword(e.target.value) }
                             />
+
                         </div>
                     </div>
-
+                    { errorMessage && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong className="font-bold">Error:</strong>
+                            <span className="block sm:inline">{ errorMessage }</span>
+                            <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
+                            </span>
+                        </div>
+                    ) }
                     <div>
                         <button
                             type="submit"

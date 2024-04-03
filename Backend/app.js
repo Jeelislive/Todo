@@ -1,73 +1,105 @@
 require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const userModel = require('./models/user');
-
+const User = require('./models/user');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const isLoggedIn = require('./middlewares/isLoggedIn');
+const { fail } = require('assert');
 
 const app = express();
 
-
-
 app.use(express.json());
-app.use(cors({
-    origin: [ "https://todo-2zxo.vercel.app" ],
-    methods: [ "POST", "GET" ],
-    credentials: true,
-}));
+app.use(cors());
 
-
-
-// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URL);
 
-app.get('/', (req, res) => {
-    res.json("helllllllllllllo");
+app.post('/signup', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        const existingUser = await User.findOne({ email: email });
+        if (existingUser) throw new Error("User already exist");
+
+        const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+
+        const user = await User.create({
+            username,
+            email,
+            password: hashedPassword
+        });
+
+        const payload = {
+            id: user._id
+        };
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        )
+
+        res.status(200).json({
+            status: "success",
+            message: "signup successfully",
+            date: {
+                user: user,
+                token: token
+            }
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            status: fail,
+            message: error.message
+        })
+    }
+
 });
 
-
-app.use(session({
-    secret: 'your-secret-key', // Replace with a strong secret key
-    resave: false,
-    saveUninitialized: false
-}));
-
-const requireLogin = (req, res, next) => {
-    if (req.session.isAuthenticated) {
-        next();
-    } else {
-        res.status(401).json({ message: "Unauthorized - User not logged in" });
-    }
-};
-
-app.post('/login', requireLogin,  (req, res) => {
+app.post('/login', async (req, res) => {
     const { email, password } = req.body;
-    userModel.findOne({ email: email })
-        .then(User => {
-            if (User) {
-                if (User.password === password) {
-                    // Set session to indicate user is logged in
-                    req.session.isAuthenticated = true;
-                    res.json("success");
-                } else {
-                    res.json("the password is incorrect");
-                }
-            } else {
-                res.json("no record exist");
+    try {
+        const user = await User.findOne({ email: email });
+
+        if (!user) {
+            throw new Error("invalid email or password")
+        }
+
+        const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+        const isEqual = hashedPassword === user.password;
+        if (!isEqual) {
+            throw new Error("Invalid email or password");
+        }
+
+        const payload = {
+            id: user._id
+        };
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: "1h" }
+        );
+
+        res.status(200).json({
+            status: "success",
+            message: "Login successfully",
+            data: {
+                token: token,
+                user: user,
             }
         })
-        .catch(err => res.json(err));
-});
 
-app.post('/signup', (req, res) => {
-    userModel.create(req.body)
-        .then(user => 
-            res.json(user))
-        .catch(err => 
-            res.json(err));
-});
-
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            status: fail,
+            message: error.message,
+        })
+    }
+})
 
 
 app.listen(3000, () => {

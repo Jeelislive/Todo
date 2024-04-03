@@ -1,26 +1,37 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import axios from 'axios';
+
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
+    const [ email, setEmail ] = useState('');
+    const [ password, setPassword ] = useState('');
+    const [ errorMessage, setErrorMessage ] = useState('');
+    const [ loading, setLoading ] = useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        axios.post('https://deploy-mern-1whq.vercel.app/login', { email, password })
-            .then(result => {
-                console.log(result);
-                if (result.data === "success") {
-                    navigate('/dashboard');
-                } else {
-                    setErrorMessage('Incorrect email or password');
-                }
-            })
-            .catch(err => console.log(err));
-    }
+        setLoading(true);
+        try {
+            const option = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            }
+            const response = await fetch('http://localhost:3000/login', option);
+            if (response.ok) {
+                navigate('/todo');
+            } else {
+                const errorMessage = await response.text();
+                setErrorMessage(errorMessage || 'Incorrect email or password');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setErrorMessage('Failed to log in');
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -43,11 +54,12 @@ const Login = () => {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={ email }
+                                onChange={ (e) => setEmail(e.target.value) }
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Email address"
                             />
+
                         </div>
                         <div>
                             <label htmlFor="password" className="sr-only">
@@ -59,11 +71,12 @@ const Login = () => {
                                 type="password"
                                 autoComplete="current-password"
                                 required
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={ password }
+                                onChange={ (e) => setPassword(e.target.value) }
                                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                 placeholder="Password"
                             />
+
                         </div>
                     </div>
 
